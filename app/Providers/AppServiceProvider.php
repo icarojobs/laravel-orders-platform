@@ -4,10 +4,13 @@ namespace App\Providers;
 
 use App\Domain\Orders\Contracts\OrderNumberGenerator;
 use App\Domain\Orders\Support\DateBasedOrderNumberGenerator;
+use App\Listeners\FlushSalesReportCache;
+use App\Models\Order;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -27,6 +30,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+
+        Event::listen('eloquent.saved: '.Order::class, FlushSalesReportCache::class);
     }
 
     /**
