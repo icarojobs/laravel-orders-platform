@@ -40,6 +40,7 @@ final readonly class OrderSearch
     public function query(): Builder
     {
         return Order::query()
+            ->with(['customer', 'items.product'])
             ->when($this->status, fn (Builder $query, OrderStatus $status) => $query->where('status', $status))
             ->when($this->customerId, fn (Builder $query, int $id) => $query->where('customer_id', $id))
             ->when($this->term, fn (Builder $query, string $term) => $query->where(function (Builder $query) use ($term) {

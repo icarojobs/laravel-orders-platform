@@ -15,6 +15,8 @@ class OrderStatusController extends Controller
     {
         Gate::authorize('updateStatus', [$order, $request->target()]);
 
-        return OrderResource::make($statuses->apply($order, $request->target()));
+        $statuses->apply($order, $request->target());
+
+        return OrderResource::make($order->load(['customer', 'items.product']));
     }
 }
