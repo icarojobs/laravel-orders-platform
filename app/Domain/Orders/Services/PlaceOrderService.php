@@ -67,6 +67,6 @@ class PlaceOrderService
 
         OrderPlaced::dispatch($order);
 
-        return $order->load('items');
+        return $order->load(['customer', 'items.product']);
     }
 }

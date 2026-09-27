@@ -36,6 +36,6 @@ class OrderController extends Controller
     {
         Gate::authorize('view', $order);
 
-        return OrderResource::make($order);
+        return OrderResource::make($order->load(['customer', 'items.product']));
     }
 }
