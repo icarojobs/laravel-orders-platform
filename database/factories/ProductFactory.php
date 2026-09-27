@@ -10,11 +10,13 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class ProductFactory extends Factory
 {
+    private const ITEMS = ['Cabo HDMI', 'Monitor', 'Teclado', 'Mouse', 'Headset', 'Notebook', 'SSD', 'Roteador', 'Webcam', 'Cadeira'];
+
     public function definition(): array
     {
         return [
             'sku' => fake()->unique()->bothify('SKU-####-??'),
-            'name' => fake()->unique()->catchPhrase(),
+            'name' => sprintf('%s %s', fake()->randomElement(self::ITEMS), fake()->bothify('?##')),
             'price_cents' => fake()->numberBetween(990, 99_900),
             'stock' => fake()->numberBetween(20, 500),
         ];
