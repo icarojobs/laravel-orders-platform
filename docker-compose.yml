@@ -1,0 +1,107 @@
+name: orders-platform
+
+x-app: &app
+  image: laravel-orders-platform/app:dev
+  environment: &app-env
+    APP_NAME: "Orders Platform"
+    APP_ENV: ${APP_ENV:-production}
+    APP_DEBUG: ${APP_DEBUG:-false}
+    APP_KEY: ${APP_KEY:-base64:Q2hhbmdlTWVJblByb2R1Y3Rpb25QbGVhc2VPcmRlcnM=}
+    APP_URL: ${APP_URL:-http://localhost:8080}
+    LOG_CHANNEL: stderr
+    DB_CONNECTION: pgsql
+    DB_HOST: postgres
+    DB_PORT: 5432
+    DB_DATABASE: orders
+    DB_USERNAME: orders
+    DB_PASSWORD: secret
+    REDIS_CLIENT: phpredis
+    REDIS_HOST: redis
+    CACHE_STORE: redis
+    SESSION_DRIVER: redis
+    QUEUE_CONNECTION: redis
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  app:
+    <<: *app
+    build:
+      context: .
+      target: dev
+    environment:
+      <<: *app-env
+      RUN_MIGRATIONS: "true"
+      RUN_SEEDERS: ${RUN_SEEDERS:-false}
+    healthcheck:
+      test: ["CMD-SHELL", "SCRIPT_NAME=/status SCRIPT_FILENAME=/status REQUEST_METHOD=GET cgi-fcgi -bind -connect 127.0.0.1:9000 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+
+  web:
+    image: laravel-orders-platform/web:dev
+    build:
+      context: .
+      target: web
+    ports:
+      - "${APP_PORT:-8080}:80"
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/up > /dev/null || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  worker:
+    <<: *app
+    command: ["php", "artisan", "queue:work", "--tries=3", "--sleep=1"]
+    depends_on:
+      app:
+        condition: service_healthy
+
+  test:
+    <<: *app
+    profiles: ["test"]
+    environment:
+      <<: *app-env
+      APP_ENV: testing
+      DB_DATABASE: orders_testing
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+    command: ["php", "artisan", "test"]
+
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: orders
+      POSTGRES_USER: orders
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "${DB_FORWARD_PORT:-54329}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orders -d orders"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:8-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  postgres-data:
