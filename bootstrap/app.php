@@ -1,5 +1,7 @@
 <?php
 
+use App\Domain\Orders\Exceptions\InsufficientStock;
+use App\Domain\Orders\Exceptions\InvalidOrderTransition;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
@@ -28,4 +30,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        $exceptions->render(fn (InvalidOrderTransition|InsufficientStock $e, Request $request) => $request->expectsJson()
+            ? response()->json(['message' => $e->getMessage()], 422)
+            : null);
     })->create();
