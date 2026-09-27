@@ -12,9 +12,14 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
-        User::factory()->create([
+        User::factory()->admin()->create([
             'name' => 'Admin',
             'email' => 'admin@example.com',
+        ]);
+
+        User::factory()->viewer()->create([
+            'name' => 'Viewer',
+            'email' => 'viewer@example.com',
         ]);
 
         $this->call(OrderSeeder::class);
