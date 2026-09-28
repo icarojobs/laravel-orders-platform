@@ -1,0 +1,31 @@
+{
+    "name": "icarojobs/notification-service",
+    "description": "Consumes order events from RabbitMQ and sends customer notifications.",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "ext-pdo": "*",
+        "monolog/monolog": "^3.9",
+        "php-amqplib/php-amqplib": "^3.7"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^12.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "NotificationService\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "NotificationService\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

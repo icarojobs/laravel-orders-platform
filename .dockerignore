@@ -18,3 +18,4 @@ tests/e2e/results
 playwright-report
 test-results
 *.sqlite
+notification-service

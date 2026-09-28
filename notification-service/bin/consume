@@ -1,0 +1,71 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Monolog\Formatter\JsonFormatter;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
+use NotificationService\Config;
+use NotificationService\Database;
+use NotificationService\Dispatcher;
+use NotificationService\Handlers\OrderPlacedHandler;
+use NotificationService\Handlers\OrderShippedHandler;
+use NotificationService\Messaging\Consumer;
+use NotificationService\Sender\LogSender;
+use NotificationService\Store\PdoNotificationStore;
+use PhpAmqpLib\Connection\AMQPStreamConnection;
+
+require __DIR__.'/../vendor/autoload.php';
+
+$config = Config::fromEnv(getenv());
+$logger = new Logger('notification-service', [
+    (new StreamHandler('php://stdout'))->setFormatter(new JsonFormatter),
+]);
+
+$retry = static function (callable $connect, string $what) use ($logger) {
+    for ($attempt = 1; ; $attempt++) {
+        try {
+            return $connect();
+        } catch (Throwable $e) {
+            if ($attempt >= 30) {
+                throw $e;
+            }
+            $logger->warning("Waiting for {$what}", ['attempt' => $attempt, 'error' => $e->getMessage()]);
+            sleep(2);
+        }
+    }
+};
+
+$pdo = $retry(fn () => Database::connect($config), 'postgres');
+$store = new PdoNotificationStore($pdo);
+$store->migrate();
+
+$connection = $retry(fn () => new AMQPStreamConnection(
+    $config->amqpHost,
+    $config->amqpPort,
+    $config->amqpUser,
+    $config->amqpPassword,
+    $config->amqpVhost,
+), 'rabbitmq');
+$channel = $connection->channel();
+
+$dispatcher = new Dispatcher(
+    [new OrderPlacedHandler, new OrderShippedHandler],
+    $store,
+    new LogSender($logger),
+    $logger,
+);
+
+$consumer = new Consumer($channel, $dispatcher, $config, $logger);
+$consumer->declareTopology();
+
+pcntl_async_signals(true);
+pcntl_signal(SIGTERM, $consumer->stop(...));
+pcntl_signal(SIGINT, $consumer->stop(...));
+
+$consumer->run();
+
+$channel->close();
+$connection->close();
+$logger->info('Consumer stopped');

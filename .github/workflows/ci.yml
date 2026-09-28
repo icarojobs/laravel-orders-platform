@@ -107,6 +107,26 @@ jobs:
       - name: Type check
         run: npm run types:check
 
+  notification-service:
+    name: notification-service (PHPUnit)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: notification-service
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: sockets, bcmath
+          tools: composer:v2
+          coverage: pcov
+
+      - run: composer install --no-interaction --prefer-dist --no-progress
+
+      - run: vendor/bin/phpunit --coverage-text
+
   docker:
     name: Docker build & smoke test
     runs-on: ubuntu-latest
@@ -124,8 +144,13 @@ jobs:
           curl --fail --silent http://localhost:8080/up
           curl --fail --silent --output /dev/null http://localhost:8080/login
 
-      - name: Test suite inside the container
-        run: docker compose run --rm test
+      - name: Test suites inside the containers
+        run: |
+          docker compose run --rm test
+          docker compose run --rm notification-service-test
+
+      - name: End-to-end event flow
+        run: docker/smoke.sh
 
       - name: Logs on failure
         if: failure()
