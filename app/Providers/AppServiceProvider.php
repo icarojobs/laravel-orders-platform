@@ -2,8 +2,11 @@
 
 namespace App\Providers;
 
+use App\Domain\Orders\Contracts\OrderEventPublisher;
 use App\Domain\Orders\Contracts\OrderNumberGenerator;
 use App\Domain\Orders\Support\DateBasedOrderNumberGenerator;
+use App\Infrastructure\Messaging\LogOrderEventPublisher;
+use App\Infrastructure\Messaging\RabbitMqOrderEventPublisher;
 use App\Listeners\FlushSalesReportCache;
 use App\Models\Order;
 use Carbon\CarbonImmutable;
@@ -22,6 +25,11 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(OrderNumberGenerator::class, DateBasedOrderNumberGenerator::class);
+
+        $this->app->singleton(OrderEventPublisher::class, fn ($app) => match ($app['config']->get('messaging.driver')) {
+            'rabbitmq' => new RabbitMqOrderEventPublisher($app['config']->get('messaging.rabbitmq')),
+            default => $app->make(LogOrderEventPublisher::class),
+        });
     }
 
     /**

@@ -21,10 +21,16 @@ x-app: &app
     CACHE_STORE: redis
     SESSION_DRIVER: redis
     QUEUE_CONNECTION: redis
+    MESSAGING_DRIVER: rabbitmq
+    RABBITMQ_HOST: rabbitmq
+    RABBITMQ_USER: orders
+    RABBITMQ_PASSWORD: secret
   depends_on:
     postgres:
       condition: service_healthy
     redis:
+      condition: service_healthy
+    rabbitmq:
       condition: service_healthy
 
 services:
@@ -60,12 +66,17 @@ services:
       timeout: 3s
       retries: 20
 
-  worker:
+  horizon:
     <<: *app
-    command: ["php", "artisan", "queue:work", "--tries=3", "--sleep=1"]
+    command: ["php", "artisan", "horizon"]
     depends_on:
       app:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "php artisan horizon:status | grep -q running"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   test:
     <<: *app
@@ -77,6 +88,7 @@ services:
       CACHE_STORE: array
       SESSION_DRIVER: array
       QUEUE_CONNECTION: sync
+      MESSAGING_DRIVER: log
     command: ["php", "artisan", "test"]
 
   postgres:
@@ -102,6 +114,19 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       interval: 3s
       timeout: 3s
+      retries: 20
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: orders
+      RABBITMQ_DEFAULT_PASS: secret
+    ports:
+      - "${RABBITMQ_UI_PORT:-15672}:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
       retries: 20
 
 volumes:
