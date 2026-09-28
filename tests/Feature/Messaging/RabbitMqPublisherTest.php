@@ -31,4 +31,8 @@ it('delivers messages to queues bound to the exchange', function () {
     $channel->exchange_delete($exchange);
     $channel->close();
     $connection->close();
-})->group('integration')->skip(fn () => ! getenv('RABBITMQ_HOST'), 'RabbitMQ is not available.');
+})->group('integration')->skip(function () {
+    $connection = @fsockopen(config('messaging.rabbitmq.host'), config('messaging.rabbitmq.port'), timeout: 0.5);
+
+    return $connection === false;
+}, 'RabbitMQ is not reachable.');
