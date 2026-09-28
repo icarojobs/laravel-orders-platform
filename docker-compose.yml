@@ -91,6 +91,33 @@ services:
       MESSAGING_DRIVER: log
     command: ["php", "artisan", "test"]
 
+  notification-service:
+    image: laravel-orders-platform/notification-service:dev
+    build:
+      context: ./notification-service
+      target: runtime
+    environment: &notification-env
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: orders
+      RABBITMQ_PASSWORD: secret
+      DB_HOST: postgres
+      DB_DATABASE: notifications
+      DB_USERNAME: orders
+      DB_PASSWORD: secret
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  notification-service-test:
+    image: laravel-orders-platform/notification-service:test
+    build:
+      context: ./notification-service
+      target: test
+    profiles: ["test"]
+
   postgres:
     image: postgres:18-alpine
     environment:
