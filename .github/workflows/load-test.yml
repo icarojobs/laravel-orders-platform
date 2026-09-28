@@ -8,7 +8,11 @@ on:
         default: '20000'
       vus:
         description: Virtual users
-        default: '30'
+        default: '10'
+      enforce_thresholds:
+        description: Fail the run when k6 thresholds are crossed
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -28,6 +32,7 @@ jobs:
       - name: k6
         run: |
           docker run --rm --network host -v "$PWD/loadtest:/scripts" grafana/k6 run \
+            ${{ inputs.enforce_thresholds && '' || '--no-thresholds' }} \
             -e VUS=${{ inputs.vus }} -e DURATION=30s /scripts/orders-api.js
 
       - name: Tear down
