@@ -1,0 +1,35 @@
+name: load-test
+
+on:
+  workflow_dispatch:
+    inputs:
+      orders:
+        description: Orders to seed
+        default: '20000'
+      vus:
+        description: Virtual users
+        default: '30'
+
+permissions:
+  contents: read
+
+jobs:
+  k6:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Start stack
+        run: docker compose up -d --build --wait --wait-timeout 300
+
+      - name: Seed database
+        run: docker compose exec -T -e SEED_ORDERS=${{ inputs.orders }} app php artisan db:seed --force
+
+      - name: k6
+        run: |
+          docker run --rm --network host -v "$PWD/loadtest:/scripts" grafana/k6 run \
+            -e VUS=${{ inputs.vus }} -e DURATION=30s /scripts/orders-api.js
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v
