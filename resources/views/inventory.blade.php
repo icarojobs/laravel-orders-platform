@@ -5,7 +5,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Estoque - {{ config('app.name') }}</title>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-        @fonts
         @vite(['resources/css/app.css'])
     </head>
     <body class="bg-neutral-50 font-sans text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100">
