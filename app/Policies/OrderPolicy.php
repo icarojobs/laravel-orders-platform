@@ -11,12 +11,12 @@ class OrderPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->tokenCan('orders:read');
+        return $user->tokenAllows('orders:read');
     }
 
     public function view(User $user, Order $order): bool
     {
-        return $user->tokenCan('orders:read');
+        return $user->tokenAllows('orders:read');
     }
 
     public function create(User $user): bool
@@ -35,6 +35,6 @@ class OrderPolicy
 
     private function canWrite(User $user): bool
     {
-        return $user->role->canManageOrders() && $user->tokenCan('orders:write');
+        return $user->role->canManageOrders() && $user->tokenAllows('orders:write');
     }
 }

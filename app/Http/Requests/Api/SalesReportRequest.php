@@ -9,7 +9,7 @@ class SalesReportRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->tokenCan('orders:read') ?? false;
+        return $this->user()?->tokenAllows('orders:read') ?? false;
     }
 
     /**
