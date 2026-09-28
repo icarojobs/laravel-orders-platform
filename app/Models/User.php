@@ -52,6 +52,14 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         ];
     }
 
+    /**
+     * Session users are not bound to token abilities, only to their role.
+     */
+    public function tokenAllows(string $ability): bool
+    {
+        return $this->currentAccessToken() === null || $this->tokenCan($ability);
+    }
+
     public function hasRole(UserRole $role): bool
     {
         return $this->role === $role;
