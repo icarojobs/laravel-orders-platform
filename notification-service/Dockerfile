@@ -10,6 +10,7 @@ WORKDIR /app
 
 FROM base AS test
 
+RUN install-php-extensions pcov
 COPY composer.json composer.lock ./
 RUN composer install --no-interaction --prefer-dist --no-progress
 COPY . .
