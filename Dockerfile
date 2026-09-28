@@ -10,6 +10,7 @@ RUN install-php-extensions pdo_pgsql redis pcntl bcmath sockets intl zip opcache
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY docker/php/php.ini /usr/local/etc/php/conf.d/zz-app.ini
+COPY docker/php/zz-pool.conf /usr/local/etc/php-fpm.d/zz-pool.conf
 
 WORKDIR /var/www/html
 
