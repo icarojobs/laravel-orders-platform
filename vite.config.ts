@@ -32,7 +32,6 @@ export default defineConfig({
         watch: {
             ignored: [
                 '**/.agents/**',
-                '**/.claude/**',
                 '**/.cursor/**',
                 '**/.junie/**',
                 '**/vendor/**',
