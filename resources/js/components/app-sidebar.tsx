@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { FolderGit2, LayoutGrid, ShoppingCart } from 'lucide-react';
+import { Boxes, FolderGit2, LayoutGrid, ShoppingCart } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -13,7 +13,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
+import { dashboard, inventory } from '@/routes';
 import { index as orders } from '@/routes/orders';
 import type { NavItem } from '@/types';
 
@@ -27,6 +27,12 @@ const mainNavItems: NavItem[] = [
         title: 'Pedidos',
         href: orders(),
         icon: ShoppingCart,
+    },
+    {
+        title: 'Estoque',
+        href: inventory(),
+        icon: Boxes,
+        external: true,
     },
 ];
 
