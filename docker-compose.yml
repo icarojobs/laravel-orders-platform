@@ -8,6 +8,7 @@ x-app: &app
     APP_DEBUG: ${APP_DEBUG:-false}
     APP_KEY: ${APP_KEY:-base64:Q2hhbmdlTWVJblByb2R1Y3Rpb25QbGVhc2VPcmRlcnM=}
     APP_URL: ${APP_URL:-http://localhost:8080}
+    APP_FAKER_LOCALE: pt_BR
     LOG_CHANNEL: stderr
     DB_CONNECTION: pgsql
     DB_HOST: postgres
